@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { spawn, execFile } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
@@ -9,6 +11,22 @@ const PORT = process.env.PORT || 10000;
 // WAJIB diisi di Render > Environment. Ini kunci supaya microservice tidak
 // bisa dipakai sembarang orang yang nebak-nebak URL-nya.
 const API_KEY = process.env.API_KEY || '';
+
+// --- Cookies YouTube (isi base64 dari file cookies.txt, di-set lewat env var Render) ---
+// Dipakai supaya yt-dlp tidak kena "Sign in to confirm you're not a bot" karena IP datacenter.
+const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
+if (process.env.YTDLP_COOKIES_B64) {
+  try {
+    fs.writeFileSync(COOKIES_PATH, Buffer.from(process.env.YTDLP_COOKIES_B64, 'base64').toString('utf8'));
+    console.log('cookies.txt berhasil ditulis dari env var YTDLP_COOKIES_B64');
+  } catch (e) {
+    console.error('Gagal menulis cookies.txt:', e.message);
+  }
+}
+const hasCookies = fs.existsSync(COOKIES_PATH);
+function cookieArgs() {
+  return hasCookies ? ['--cookies', COOKIES_PATH] : [];
+}
 
 function checkAuth(req, res) {
   if (!API_KEY) return true; // kalau tidak diset -> service terbuka, TIDAK disarankan untuk production
@@ -24,7 +42,7 @@ function ytDlpInfo(url) {
   return new Promise((resolve, reject) => {
     execFile(
       'yt-dlp',
-      ['-j', '--no-playlist', '--no-warnings', url],
+      ['-j', '--no-playlist', '--no-warnings', ...cookieArgs(), url],
       { maxBuffer: 1024 * 1024 * 20, timeout: 30000 },
       (err, stdout) => {
         if (err) return reject(err);
@@ -36,7 +54,7 @@ function ytDlpInfo(url) {
 }
 
 app.get('/health', (req, res) => {
-  res.json({ status: true, message: 'yt-dlp microservice aktif' });
+  res.json({ status: true, message: 'yt-dlp microservice aktif', cookiesLoaded: hasCookies });
 });
 
 // GET /info?url=<youtube_url>&key=<API_KEY>
@@ -87,6 +105,7 @@ app.get('/stream', (req, res) => {
     '--no-playlist',
     '--no-warnings',
     '--merge-output-format', 'mp4',
+    ...cookieArgs(),
     '-o', '-',
     url
   ];
