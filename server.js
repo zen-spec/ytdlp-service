@@ -47,6 +47,9 @@ function ytDlpInfo(url) {
         // Coba beberapa client sekaligus; yt-dlp otomatis pilih yang formatnya lengkap.
         // Client mana yang "aman" dari SABR/PO-Token berubah-ubah seiring update YouTube.
         '--extractor-args', 'youtube:player_client=tv,android,web_safari',
+        // Wajib ada JS runtime, kalau tidak yt-dlp gagal nyelesain "n challenge"
+        // YouTube dan semua format ke-skip -> "Requested format is not available".
+        '--js-runtimes', 'deno',
         ...cookieArgs(),
         url
       ],
@@ -115,6 +118,7 @@ app.get('/stream', (req, res) => {
     '--no-playlist',
     '--no-warnings',
     '--extractor-args', 'youtube:player_client=tv,android,web_safari',
+    '--js-runtimes', 'deno',
     '--merge-output-format', 'mp4',
     ...cookieArgs(),
     '-o', '-',
