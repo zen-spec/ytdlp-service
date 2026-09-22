@@ -50,9 +50,12 @@ function ytDlpInfo(url) {
         ...cookieArgs(),
         url
       ],
-      { maxBuffer: 1024 * 1024 * 20, timeout: 30000 },
-      (err, stdout) => {
-        if (err) return reject(err);
+      { maxBuffer: 1024 * 1024 * 20, timeout: 60000 },
+      (err, stdout, stderr) => {
+        if (err) {
+          if (stderr) console.error('yt-dlp stderr:', stderr.slice(0, 2000));
+          return reject(err);
+        }
         try { resolve(JSON.parse(stdout)); }
         catch (e) { reject(e); }
       }
