@@ -42,7 +42,13 @@ function ytDlpInfo(url) {
   return new Promise((resolve, reject) => {
     execFile(
       'yt-dlp',
-      ['-j', '--no-playlist', '--no-warnings', ...cookieArgs(), url],
+      [
+        '-j', '--no-playlist', '--no-warnings',
+        // Client "tv" tidak butuh PO Token selama cookies terpasang (YouTube SABR rollout 2025-2026)
+        '--extractor-args', 'youtube:player_client=tv',
+        ...cookieArgs(),
+        url
+      ],
       { maxBuffer: 1024 * 1024 * 20, timeout: 30000 },
       (err, stdout) => {
         if (err) return reject(err);
@@ -104,6 +110,7 @@ app.get('/stream', (req, res) => {
     '-f', format,
     '--no-playlist',
     '--no-warnings',
+    '--extractor-args', 'youtube:player_client=tv',
     '--merge-output-format', 'mp4',
     ...cookieArgs(),
     '-o', '-',
