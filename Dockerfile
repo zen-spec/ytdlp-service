@@ -18,4 +18,7 @@ COPY . .
 ENV PORT=10000
 EXPOSE 10000
 
-CMD ["node", "server.js"]
+# yt-dlp -U diselipkan setiap kali CONTAINER START (bukan cuma build) supaya selalu
+# pakai versi terbaru - yt-dlp rilis update hampir tiap minggu buat ngikutin
+# perubahan/proteksi baru YouTube. Kalau -U gagal (mis. rate-limit GitHub), tetap lanjut jalan.
+CMD ["sh", "-c", "yt-dlp -U || true; node server.js"]
