@@ -8,7 +8,8 @@ RUN apt-get update && \
 
 # yt-dlp (butuh python3 di atas untuk jalan)
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
-    chmod a+rx /usr/local/bin/yt-dlp
+    chmod a+rx /usr/local/bin/yt-dlp && \
+    yt-dlp --version
 
 # Deno: dibutuhkan yt-dlp buat nyelesain "n challenge" JS dari YouTube.
 # Tanpa ini, sebagian besar format video di-skip (SABR streaming) dan yt-dlp
